@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Requests\Api\CustomRequest;
+
+class {{ class }} extends CustomRequest
+{
+    public function rules(): array
+    {
+        return [
+            //
+        ];
+    }
+}
