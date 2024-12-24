@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('messages', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('conversation_id')->after('id'); // أضف العمود إذا لم يكن موجودًا
-            $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade');$table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // المستخدم الذي أرسل الرسالة
+            $table->id(); // العمود الأساسي
+            $table->unsignedBigInteger('conversation_id'); // معرف المحادثة
+            $table->foreign('conversation_id')->references('id')->on('conversations')->onDelete('cascade'); // العلاقة مع جدول المحادثات
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // العلاقة مع جدول المستخدمين
             $table->text('message')->nullable(); // النص أو مسار الصورة
             $table->string('message_type')->nullable(); // نوع الرسالة: نص أو صورة
-            $table->timestamp('read_at')->nullable(); // لمعرفة إذا كانت الرسالة قد تم قراءتها
-            $table->timestamps();
+            $table->timestamp('read_at')->nullable(); // وقت قراءة الرسالة
+            $table->timestamps(); // وقت الإنشاء والتحديث
         });
     }
 
