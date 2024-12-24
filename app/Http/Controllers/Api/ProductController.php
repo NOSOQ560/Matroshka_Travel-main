@@ -9,6 +9,7 @@ use App\Http\Resources\Api\ProductResource;
 use App\Models\Product;
 use App\Services\ImageService;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,11 +17,37 @@ class ProductController extends Controller
 {
     public function __construct(private readonly Product $productModel) {}
 
-    public function index(): JsonResponse|JsonResource
+//    public function index(): JsonResponse|JsonResource
+//    {
+//        try {
+//            $products = $this->productModel::with(['category', 'mainImage', 'otherImages'])->paginate(16);
+//
+//            return ResponseHelper::okResponse(data: ProductResource::collection($products));
+//        } catch (Exception $exception) {
+//            return ResponseHelper::internalServerErrorResponse($exception->getMessage());
+//        }
+//    }
+
+    public function index(Request $request): JsonResponse|JsonResource
     {
         try {
-            $products = $this->productModel::with(['category', 'mainImage', 'otherImages'])->get();
+            // الحصول على category_id من الطلب
+            $categoryId = $request->input('category_id');
 
+            // بناء الاستعلام
+            $query = $this->productModel::with(['category', 'mainImage', 'otherImages']);
+
+            // إذا تم تمرير category_id، قم بتصفية النتائج بناءً عليه
+            if ($categoryId) {
+                $query->whereHas('category', function ($q) use ($categoryId) {
+                    $q->where('id', $categoryId);
+                });
+            }
+
+            // تنفيذ الاستعلام مع التصفح
+            $products = $query->paginate(16);
+
+            // إرجاع النتيجة
             return ResponseHelper::okResponse(data: ProductResource::collection($products));
         } catch (Exception $exception) {
             return ResponseHelper::internalServerErrorResponse($exception->getMessage());
