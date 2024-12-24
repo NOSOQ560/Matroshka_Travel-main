@@ -28,11 +28,11 @@ class ProductController extends Controller
 //        }
 //    }
 
-    public function index(Request $request): JsonResponse|JsonResource
+    public function index($categoryId): JsonResponse|JsonResource
     {
         try {
             // الحصول على category_id من الطلب
-            $categoryId = $request->input('category_id');
+//            $categoryId = $request->input('category_id');
 
             // بناء الاستعلام
             $query = $this->productModel::with(['category', 'mainImage', 'otherImages']);

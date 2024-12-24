@@ -53,7 +53,7 @@ Route::group(['prefix' => 'v1/category'], function () {
 });
 // products
 Route::group(['prefix' => 'v1/product'], function () {
-    Route::get('', [ProductController::class, 'index']);
+    Route::get('/{categoryId}', [ProductController::class, 'index']);
     Route::get('{id}', [ProductController::class, 'show']);
 });
 
