@@ -99,9 +99,21 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(conversations::class);
     }
 
+    /////////////////////////   ////////////////
     public function messages()
     {
         return $this->hasMany(messages::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    // علاقة مع الكاش باك
+    public function cashbacks()
+    {
+        return $this->hasMany(Cashback::class);
     }
 
 }

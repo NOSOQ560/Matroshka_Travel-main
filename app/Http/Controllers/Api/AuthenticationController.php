@@ -64,9 +64,9 @@ class AuthenticationController extends Controller
         try {
             if (auth()->attempt($request->validated())) {
                 $user = auth()->user();
-                if (! $user->hasVerifiedEmail()) {
-                    return ResponseHelper::unauthorizedResponse();
-                }
+//                if (! $user->hasVerifiedEmail()) {
+//                    return ResponseHelper::unauthorizedResponse();
+//                }
 
                 return ResponseHelper::okResponse(__('verified'), [
                     'user' => UserResource::make($user),

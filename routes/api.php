@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\StripeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\StoryController;
@@ -54,7 +55,7 @@ Route::group(['prefix' => 'v1/category'], function () {
 // products
 Route::group(['prefix' => 'v1/product'], function () {
     Route::get('/{categoryId}', [ProductController::class, 'index']);
-    Route::get('{id}', [ProductController::class, 'show']);
+    Route::get('singleProduct/{id}', [ProductController::class, 'show']);
 });
 
 // cart
@@ -78,4 +79,23 @@ Route::group(['prefix'=>'v1/chat','middleware' => ['auth:sanctum']],function (){
     Route::post('getMessages', [ChatController::class, 'createOrGetConversationWithMessages']);
     Route::get('unreadMessages/{conversation_id}', [ChatController::class, 'getUnreadMessagesCount']);
     Route::get('getChats', [ChatController::class, 'getChats']);
+});
+
+
+
+///////////////   Payment Gateways  ///////////////
+Route::group(['prefix'=>'v1/payment','middleware' => ['auth:sanctum']],function (){
+
+    /////////////////////  stripe  ///////////////
+    Route::post('stripe/sendPayment', [StripeController::class, 'sendPayment']);
+    Route::match(['GET','POST'],'stripe/callback', [StripeController::class, 'callBack'])->name('stripe.callback');
+
+    Route::get('/all', [StripeController::class, 'getAllPaymentsWithCashbacks']);
+    Route::get('/user/payments', [StripeController::class, 'getUserPaymentsWithCashbacks']);
+    Route::get('/user/cashback', [StripeController::class, 'getUserCashback']);
+    Route::get('/cashbacks', [StripeController::class, 'getAllCashbacks']);
+
+
+
+
 });
