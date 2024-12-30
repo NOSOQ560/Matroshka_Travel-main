@@ -13,13 +13,13 @@ use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\CarReservationController;
 
 //################################### Authentication ####################################
-Route::prefix('v1/auth')->group(function () {
+Route::prefix('v1/auth')->middleware('api')->group(function () {
     Route::controller(AuthenticationController::class)
         ->group(function () {
             Route::post('/register', 'register');
             Route::post('/resend-otp', 'resendOtp');
             Route::post('/verify-email', 'verifyEmail');
-            Route::post('/login', 'login');
+            Route::post('/login', 'login')->name('login');
             Route::post('/forget-password', 'resendOtp');
             Route::put('/reset-password', 'resetPassword');
         });

@@ -11,16 +11,32 @@ use App\Models\CartItem;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
     public function __construct(private readonly Cart $cartModel, private readonly CartItem $cartItemModel) {}
 
+//    public function index(): JsonResponse|JsonResource
+//    {
+//        try {
+//            $cart = $this->cartModel::whereUserId(auth()->id())->with('cartItems.product.mainImage')->first();
+//
+//            return ResponseHelper::okResponse(data: CartResource::make($cart));
+//        } catch (Exception $exception) {
+//            return ResponseHelper::internalServerErrorResponse($exception->getMessage());
+//        }
+//    }
+
     public function index(): JsonResponse|JsonResource
     {
         try {
             $cart = $this->cartModel::whereUserId(auth()->id())->with('cartItems.product.mainImage')->first();
+
+            if (!$cart) {
+                return ResponseHelper::notFoundResponse('Cart not found.');
+            }
 
             return ResponseHelper::okResponse(data: CartResource::make($cart));
         } catch (Exception $exception) {
@@ -28,36 +44,72 @@ class CartController extends Controller
         }
     }
 
+//    public function store(CartRequest $request): JsonResponse
+//    {
+//        try {
+//            $data = $request->validated();
+//            $cart = $this->cartModel::whereUserId(auth()->id())->first();
+//            if (empty($cart)) {
+//                $cart = $this->cartModel::create($data + ['user_id' => auth()->id()]);
+//            }
+//
+//            $cartItem = $this->cartItemModel::where([
+//                'cart_id' => $cart['id'],
+//                'product_id' => $data['product_id'],
+//            ])->first();
+//
+//            $totalQuantity = $cartItem ? $cartItem->quantity + $data['quantity'] : $data['quantity'];
+//
+//            if ($totalQuantity > $cartItem->product->stock) {
+//                throw ValidationException::withMessages([
+//                    'quantity' => __('messages.not_enough_product', ['available' => $cartItem->product->stock]),
+//                ]);
+//            }
+//
+//            if (! empty($cartItem)) {
+//                $cartItem->increment('quantity', $data['quantity']);
+//            } else {
+//                $this->cartItemModel::create($data + ['cart_id' => $cart['id']]);
+//            }
+//
+//            return ResponseHelper::createdResponse(data: CartResource::make($cart));
+//        } catch (Exception $exception) {
+//            return ResponseHelper::internalServerErrorResponse($exception->getMessage());
+//        }
+//    }
+
     public function store(CartRequest $request): JsonResponse
     {
+        DB::beginTransaction();
         try {
             $data = $request->validated();
-            $cart = $this->cartModel::whereUserId(auth()->id())->first();
-            if (empty($cart)) {
-                $cart = $this->cartModel::create($data + ['user_id' => auth()->id()]);
-            }
+            $cart = $this->cartModel::firstOrCreate(
+                ['user_id' => auth()->id()],
+                ['user_id' => auth()->id()]
+            );
 
             $cartItem = $this->cartItemModel::where([
-                'cart_id' => $cart['id'],
+                'cart_id' => $cart->id,
                 'product_id' => $data['product_id'],
             ])->first();
 
             $totalQuantity = $cartItem ? $cartItem->quantity + $data['quantity'] : $data['quantity'];
 
-            if ($totalQuantity > $cartItem->product->stock) {
+            if ($cartItem && $totalQuantity > $cartItem->product->stock) {
                 throw ValidationException::withMessages([
                     'quantity' => __('messages.not_enough_product', ['available' => $cartItem->product->stock]),
                 ]);
             }
 
-            if (! empty($cartItem)) {
-                $cartItem->increment('quantity', $data['quantity']);
-            } else {
-                $this->cartItemModel::create($data + ['cart_id' => $cart['id']]);
-            }
+            $this->cartItemModel::updateOrCreate(
+                ['cart_id' => $cart->id, 'product_id' => $data['product_id']],
+                ['quantity' => $totalQuantity]
+            );
 
+            DB::commit();
             return ResponseHelper::createdResponse(data: CartResource::make($cart));
         } catch (Exception $exception) {
+            DB::rollBack();
             return ResponseHelper::internalServerErrorResponse($exception->getMessage());
         }
     }
