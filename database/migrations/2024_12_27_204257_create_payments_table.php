@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('session_id'); // معرف الجلسة من Stripe
             $table->decimal('amount', 10, 2); // المبلغ
             $table->string('currency', 10); // العملة
-            $table->string('product_name')->nullable(); // اسم المنتج
+            $table->json('product_name')->nullable(); // اسم المنتج
             $table->text('description')->nullable(); // وصف المنتج
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending'); // حالة الدفع
             $table->timestamps();

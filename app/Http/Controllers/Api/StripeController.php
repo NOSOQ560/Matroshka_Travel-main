@@ -150,7 +150,7 @@ class StripeController extends Controller
                     'session_id' => $session_id,
                     'amount' => $responseData['amount_total'] / 100,  // تحويل المبلغ من سنتات إلى وحدات العملة
                     'currency' => $responseData['currency'],
-                    'product_name' => $responseData['line_items'][0]['description'] ?? 'Unknown Product',
+                    'product_name' => json_encode($request->products ?? []) ,
                     'payment_status' => 'paid',
                 ]);
 
@@ -202,8 +202,17 @@ class StripeController extends Controller
 
     public function calculateCashback($amount)
     {
-        return $amount * 0.10; // 5% cashback
+        $userType = auth()->user()->type; // الحصول على نوع المستخدم
+
+        if ($userType === 'user') {
+            return $amount * 0.10; // 10% cashback
+        } elseif ($userType === 'company') {
+            return $amount * 0.20; // 20% cashback
+        }
+
+        return 0; // في حالة لم يتم تحديد نوع المستخدم
     }
+
 
     public function getAllPaymentsWithCashbacks(): JsonResponse
     {
@@ -213,6 +222,9 @@ class StripeController extends Controller
 //            if ($payments->isEmpty()) {
 //                return $this->ReturnError(404, 'No payments found');
 //            }
+            foreach ($payments as $payment) {
+                $payment->product_name = json_decode($payment->product_name, true); // تحويل notes إلى مصفوفة
+            }
 
             return $this->ReturnData('payments', $payments, 'All payments with cashbacks');
         } catch (\Exception $ex) {
@@ -233,6 +245,9 @@ class StripeController extends Controller
 //            if ($payments->isEmpty()) {
 //                return $this->ReturnError(404, 'No payments found for this user');
 //            }
+            foreach ($payments as $payment) {
+                $payment->product_name = json_decode($payment->product_name, true); // تحويل notes إلى مصفوفة
+            }
 
             return $this->ReturnData('payments', $payments, 'User payments with cashbacks');
         } catch (\Exception $ex) {
