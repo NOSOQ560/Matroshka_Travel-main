@@ -49,81 +49,18 @@ class StripeController extends Controller
                 return $this->ReturnError(400, $result['error']['message'] ?? 'Payment failed');
             }
 
-            return $this->ReturnData('success', $result['url'], 'done url');
+            return $this->ReturnData('success', $result, 'done url');
         } catch (\Exception $ex) {
             return $this->ReturnError($ex->getCode(), $ex->getMessage());
         }
     }
 
-//    public function callBack(Request $request): \Illuminate\Http\RedirectResponse
-//    {
-//        try {
-//            $session_id = $request->get('session_id');
-//
-//            $response = Http::withHeaders($this->header)
-//                ->get($this->base_url . '/v1/checkout/sessions/' . $session_id);
-//
-//            $responseData = $response->json();
-//
-//            // حفظ الاستجابة في ملف JSON
-//            Storage::put('stripe.json', json_encode([
-//                'callback_response' => $request->all(),
-//                'response' => $responseData,
-//            ]));
-//
-//            if ($response->successful() && $responseData['payment_status'] === 'paid') {
-//                try {
-//                    $payment = Payment::create([
-//                        'user_id' => auth()->id(),
-//                        'session_id' => $session_id,
-//                        'amount' => $response->json()['amount_total'] / 100,
-//                        'currency' => $response->json()['currency'],
-//                        'product_name' => $response->json()['line_items'][0]['description'] ?? 'Unknown Product',
-//                        'payment_status' => 'paid',
-//                    ]);
-//
-//                    $cashbackAmount = $this->calculateCashback($payment->amount);
-//                    Cashback::create([
-//                        'user_id' => $payment->user_id,
-//                        'payment_id' => $payment->id,
-//                        'cashback_amount' => $cashbackAmount,
-//                        'status' => 'approved',
-//                    ]);
-//
-//                    return redirect()->route('payment.success');
-//                } catch (\Exception $ex) {
-//                    // إضافة رسالة خطأ في الـ log
-//                    \Log::error('Error saving payment: ' . $ex->getMessage());
-//                    return redirect()->route('payment.failed');
-//                }
-//            } else {
-//                return redirect()->route('payment.failed');
-//            }
-//
-//            return redirect()->route('payment.failed');
-////            return view('payment-failed');
-//        } catch (\Exception $ex) {
-//            return redirect()->route('payment.failed');
-//        }
-//    }
-
-
     public function callBack(Request $request): \Illuminate\Http\RedirectResponse
     {
         try {
-            // التأكد من أن المستخدم مسجل دخوله
-            if (!auth()->check()) {
-//                \Log::error('User is not authenticated');
-//                return redirect()->route('payment.failed');
-                return response()->json(['message' => 'Unauthorized'], 401);
-            }
-
             $session_id = $request->get('session_id');
-            if (!$session_id) {
-                \Log::error('Session ID is missing');
-                return redirect()->route('payment.failed');
-            }
 
+            // استرجاع تفاصيل الجلسة
             $response = Http::withHeaders($this->header)
                 ->get($this->base_url . '/v1/checkout/sessions/' . $session_id);
 
@@ -135,75 +72,76 @@ class StripeController extends Controller
                 'response' => $responseData,
             ]));
 
-            if ($response->successful() && isset($responseData['payment_status']) && $responseData['payment_status'] === 'paid') {
-                // التأكد من أن الـ user_id غير فارغ
-                $user_id = auth()->id();
-                if (!$user_id) {
-//                    \Log::error('User ID is missing');
-//                    return redirect()->route('payment.failed');
-                    return response()->json(['message' => 'Unauthorized'], 401);
-                }
-
-                // حفظ البيانات في قاعدة البيانات
+            // فحص إذا كانت العملية ناجحة
+            if ($response->successful() && $responseData['payment_status'] === 'paid') {
+                // حفظ بيانات الدفع في قاعدة البيانات
                 $payment = Payment::create([
-                    'user_id' => $user_id,
+                    'user_id' => $responseData['metadata']['user_id'], // استرجاع user_id من metadata
                     'session_id' => $session_id,
-                    'amount' => $responseData['amount_total'] / 100,  // تحويل المبلغ من سنتات إلى وحدات العملة
+                    'amount' => $responseData['amount_total'] / 100, // تحويل المبلغ من سنتات إلى وحدات العملة
                     'currency' => $responseData['currency'],
-                    'product_name' => json_encode($request->products ?? []) ,
+                    'product_name' => $responseData['metadata']['products'], // استرجاع قائمة المنتجات
                     'payment_status' => 'paid',
                 ]);
 
                 // حساب الكاش باك
-                $cashbackAmount = $this->calculateCashback($payment->amount);
-                Cashback::create([
-                    'user_id' => $payment->user_id,
-                    'payment_id' => $payment->id,
-                    'cashback_amount' => $cashbackAmount,
-                    'status' => 'approved',
-                ]);
+                $userType = $responseData['metadata']['user_type']; // استرجاع نوع المستخدم من metadata
+                $cashbackAmount = $this->calculateCashback($payment->amount, $userType);
 
-                // تسجيل النجاح في الـ log
-                \Log::info('Payment successful, payment saved to DB.');
+                // تحقق من قيمة الكاش باك
+                if ($cashbackAmount > 0) {
+                    // حفظ الكاش باك في قاعدة البيانات
+                    Cashback::create([
+                        'user_id' => $payment->user_id,
+                        'payment_id' => $payment->id,
+                        'cashback_amount' => $cashbackAmount,
+                        'status' => 'approved',
+                    ]);
+                }
 
                 return redirect()->route('payment.success');
-            } else {
-                \Log::error('Payment failed or status not paid.', ['response' => $responseData]);
-                return redirect()->route('payment.failed');
             }
+
+            return redirect()->route('payment.failed');
+//            return view('payment-failed');
         } catch (\Exception $ex) {
-            \Log::error('Error processing callback: ' . $ex->getMessage());
             return redirect()->route('payment.failed');
         }
     }
 
+
     public function formatData($request): array
     {
-        return [
-//            "success_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?session_id={CHECKOUT_SESSION_ID}',
-//            "cancel_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?cancel=true',
-            "success_url" => route('stripe.callback') . '?session_id={CHECKOUT_SESSION_ID}',
-            "cancel_url" => route('stripe.callback').'?cancel=true',
-            "line_items" => [
-                [
-                    "price_data" => [
-                        "currency" => $request->input("currency", "usd"),
-                        "product_data" => [
-                            "name" => $request->input("product_name", "Default Product"),
-                        ],
-                        "unit_amount" => $request->input('amount') * 100,
+
+        // معالجة قائمة المنتجات
+        $lineItems = collect($request->input('products', []))->map(function ($product) use ($request) {
+            return [
+                "price_data" => [
+                    "currency" => $request->input('currency', 'usd'), // استخدام العملة من الطلب الرئيسي
+                    "product_data" => [
+                        "name" => $product['name'], // اسم المنتج
                     ],
-                    "quantity" => $request->input('quantity', 1),
+                    "unit_amount" => $product['price'] * 100, // تحويل السعر إلى سنتات
                 ],
-            ],
+                "quantity" => $product['quantity'], // الكمية
+            ];
+        })->toArray();
+
+        return [
+            "success_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?session_id={CHECKOUT_SESSION_ID}',
+            "cancel_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?cancel=true',
+            "line_items" => $lineItems, // إضافة قائمة المنتجات
             "mode" => "payment",
+            "metadata" => [
+                "user_id" => $request->user_id, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
+                "user_type" => $request->user_type, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
+                "products" => json_encode($request->input('products', [])), // تمرير قائمة المنتجات
+            ],
         ];
     }
 
-    public function calculateCashback($amount)
+    public function calculateCashback($amount, $userType)
     {
-        $userType = auth()->user()->type; // الحصول على نوع المستخدم
-
         if ($userType === 'user') {
             return $amount * 0.10; // 10% cashback
         } elseif ($userType === 'company') {
@@ -280,7 +218,7 @@ class StripeController extends Controller
     {
         try {
             // استرجاع جميع الكاش باك
-            $cashbacks = Cashback::with(['users'])->get();
+            $cashbacks = Cashback::with(['user'])->get();
 
 //            if ($cashbacks->isEmpty()) {
 //                return $this->ReturnError(404, 'No cashbacks found');

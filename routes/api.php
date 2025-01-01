@@ -11,15 +11,17 @@ use App\Http\Controllers\Api\SocialiteController;
 use App\Http\Controllers\Api\ConfigrationController;
 use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\CarReservationController;
+use Illuminate\Http\Request;
+
 
 //################################### Authentication ####################################
-Route::prefix('v1/auth')->middleware('api')->group(function () {
+Route::prefix('v1/auth')->group(function () {
     Route::controller(AuthenticationController::class)
         ->group(function () {
             Route::post('/register', 'register');
             Route::post('/resend-otp', 'resendOtp');
             Route::post('/verify-email', 'verifyEmail');
-            Route::post('/login', 'login')->name('login');
+            Route::post('/login', 'login');
             Route::post('/forget-password', 'resendOtp');
             Route::put('/reset-password', 'resetPassword');
         });
@@ -84,18 +86,25 @@ Route::group(['prefix'=>'v1/chat','middleware' => ['auth:sanctum']],function (){
 
 
 ///////////////   Payment Gateways  ///////////////
-Route::group(['prefix'=>'v1/payment','middleware' => ['auth:sanctum']],function (){
+Route::group(['prefix'=>'v1/payment'],function (){
 
     /////////////////////  stripe  ///////////////
     Route::post('stripe/sendPayment', [StripeController::class, 'sendPayment']);
-    Route::match(['GET','POST'],'stripe/callback', [StripeController::class, 'callBack'])->name('stripe.callback');
+    Route::match(['GET','POST'],'stripe/callback', [StripeController::class, 'callBack']);
 
     Route::get('/all', [StripeController::class, 'getAllPaymentsWithCashbacks']);
-    Route::get('/user/payments', [StripeController::class, 'getUserPaymentsWithCashbacks']);
-    Route::get('/user/cashback', [StripeController::class, 'getUserCashback']);
     Route::get('/cashbacks', [StripeController::class, 'getAllCashbacks']);
 
+    Route::group(['middleware' => ['auth:sanctum']],function (){
+        Route::get('/user/payments', [StripeController::class, 'getUserPaymentsWithCashbacks']);
+        Route::get('/user/cashback', [StripeController::class, 'getUserCashback']);
+
+    });
 
 
+
+    Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+        return $request->user();
+    });
 
 });
