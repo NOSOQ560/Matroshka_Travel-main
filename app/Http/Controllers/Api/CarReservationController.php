@@ -6,6 +6,7 @@ use App\Helpers\ResponseHelper;
 use App\Http\Requests\Api\CarReservationRequest;
 use App\Http\Resources\Api\CarReservationResource;
 use App\Http\Resources\Api\CarResource;
+use App\Http\Traits\GeneralTrait;
 use App\Models\Car;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -14,6 +15,7 @@ use Illuminate\Validation\ValidationException;
 
 class CarReservationController extends Controller
 {
+    use GeneralTrait;
     /**
      * @throws ValidationException
      */
@@ -28,12 +30,13 @@ class CarReservationController extends Controller
         ->where('passenger_from', '<=', $totalPassengers)
         ->where('passenger_to', '>=', $totalPassengers)
         ->where('package_to', '>=', $data['packages'])
-        ->get();
+        ->first();
 
-        if ($availableCars->isEmpty()) {
-            throw ValidationException::withMessages([
-                'quantity' => __('messages.no_available_cars'),
-            ]);
+        if (!$availableCars || $availableCars->isEmpty()) {
+//            throw ValidationException::withMessages([
+//                'quantity' => __('messages.no_available_cars'),
+//            ]);
+            return $this->ReturnError('Error',__('messages.no_available_cars'));
         }
 
         return ResponseHelper::okResponse(data: CarResource::collection($availableCars));

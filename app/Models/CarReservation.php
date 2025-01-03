@@ -16,6 +16,7 @@ class CarReservation extends Model
         'returning',
         'packages',
         'childrens',
+        'childAge',
         'adults',
         'trip_type',
         'additional_notes',

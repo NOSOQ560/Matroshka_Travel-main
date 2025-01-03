@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('returning')->nullable();
             $table->tinyInteger('packages')->default(0);
             $table->tinyInteger('childrens')->default(0);
+            $table->json('childAge')->nullable();
             $table->tinyInteger('adults')->default(1);
             $table->string('trip_type')->nullable()->comment('accommodation , recreational');
             $table->longText('additional_notes')->nullable();

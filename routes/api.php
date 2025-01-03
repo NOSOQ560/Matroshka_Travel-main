@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StripeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CartController;
@@ -99,12 +100,23 @@ Route::group(['prefix'=>'v1/payment'],function (){
         Route::get('/user/payments', [StripeController::class, 'getUserPaymentsWithCashbacks']);
         Route::get('/user/cashback', [StripeController::class, 'getUserCashback']);
 
+
     });
-
-
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         return $request->user();
     });
 
 });
+
+
+//////////////////////// notification ////////////
+
+Route::prefix('v1/notifications')->group(function () {
+    // Route لعرض الإشعارات
+    Route::get('/', [NotificationController::class, 'index']);
+
+    // Route لتحديد الإشعارات كمقروءة
+    Route::post('/mark-as-read', [NotificationController::class, 'markAsRead']);
+});
+

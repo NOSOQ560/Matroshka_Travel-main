@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\GeneralTrait;
 use App\Models\Cashback;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -98,6 +99,13 @@ class StripeController extends Controller
                         'status' => 'approved',
                     ]);
                 }
+
+                $user = User::find($payment->user_id); // استرجاع المستخدم
+                $user->notify(new \App\Notifications\PaymentNotification([
+                    'amount' => $payment->amount,
+                    'transaction_id' => $payment->session_id,
+                    'cashback' => $cashbackAmount,
+                ]));
 
                 return redirect()->route('payment.success');
             }
