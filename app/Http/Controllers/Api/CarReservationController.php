@@ -39,6 +39,7 @@ class CarReservationController extends Controller
             return $this->ReturnError('Error',__('messages.no_available_cars'));
         }
 
-        return ResponseHelper::okResponse(data: CarResource::collection($availableCars));
+//        return ResponseHelper::okResponse(data: CarResource::collection($availableCars));
+        return $this->ReturnData('availableCars',$availableCars,'done');
     }
 }
