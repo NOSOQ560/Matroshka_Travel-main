@@ -50,7 +50,7 @@ class StripeController extends Controller
                 return $this->ReturnError(400, $result['error']['message'] ?? 'Payment failed');
             }
 
-            return $this->ReturnData('success', $result, 'done url');
+            return $this->ReturnData('success', $result['url'], 'done url');
         } catch (\Exception $ex) {
             return $this->ReturnError($ex->getCode(), $ex->getMessage());
         }
@@ -81,8 +81,9 @@ class StripeController extends Controller
                     'session_id' => $session_id,
                     'amount' => $responseData['amount_total'] / 100, // تحويل المبلغ من سنتات إلى وحدات العملة
                     'currency' => $responseData['currency'],
-                    'product_name' => $responseData['metadata']['products'], // استرجاع قائمة المنتجات
-                    'payment_status' => 'paid',
+                    'product_name' => $responseData['metadata']['products'],
+                    'description'=>$responseData['metadata']['main_product'],
+                    'payment_status' => $responseData['payment_status'],
                 ]);
 
                 // حساب الكاش باك
@@ -143,6 +144,7 @@ class StripeController extends Controller
             "metadata" => [
                 "user_id" => $request->user_id, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
                 "user_type" => $request->user_type, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
+                "main_product"=>$request->main_product,
                 "products" => json_encode($request->input('products', [])), // تمرير قائمة المنتجات
             ],
         ];

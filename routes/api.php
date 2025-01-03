@@ -25,6 +25,8 @@ Route::prefix('v1/auth')->group(function () {
             Route::post('/login', 'login');
             Route::post('/forget-password', 'resendOtp');
             Route::put('/reset-password', 'resetPassword');
+
+
         });
     Route::middleware(['auth:sanctum'])
         ->controller(AuthenticationController::class)
@@ -33,6 +35,9 @@ Route::prefix('v1/auth')->group(function () {
             Route::put('/update-profile', 'updateProfile');
             Route::delete('/delete-profile', 'deleteProfile');
             Route::get('/logout', 'logout');
+            Route::get('showUser', [AuthenticationController::class, 'showUser']);
+
+
         });
 });
 Route::controller(SocialiteController::class)

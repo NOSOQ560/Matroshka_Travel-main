@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AirportController;
+use App\Http\Controllers\Api\AuthenticationController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConfigrationController;
@@ -71,3 +72,11 @@ Route::group(['prefix' => 'v1/hotel', 'middleware' => ['auth:sanctum', 'admin-ty
     Route::put('{id}', [HotelController::class, 'update']);
     Route::delete('{id}', [HotelController::class, 'destroy']);
 });
+
+
+///////////  auth ///
+ Route::group(['prefix' => 'v1/auth', ], function () {
+     Route::get('showAll', [AuthenticationController::class, 'showAll']);
+
+});
+

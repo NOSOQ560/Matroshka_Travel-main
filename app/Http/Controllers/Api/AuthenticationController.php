@@ -12,15 +12,18 @@ use App\Http\Requests\Api\ResetPasswordRequest;
 use App\Http\Requests\Api\UpdateProfileRequest;
 use App\Http\Requests\Api\VerifyEmailRequest;
 use App\Http\Resources\Api\UserResource;
+use App\Http\Traits\GeneralTrait;
 use App\Models\User;
 use App\Notifications\UserRegisterNotification;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 
 class AuthenticationController extends Controller
 {
+    use GeneralTrait;
     public function register(RegisterRequest $request)
     {
         try {
@@ -166,6 +169,41 @@ class AuthenticationController extends Controller
             return ResponseHelper::okResponse(__('changed'), [], true);
         } catch (Exception $e) {
             return ResponseHelper::internalServerErrorResponse($e->getMessage());
+        }
+    }
+
+    public function showAll(Request $request)
+    {
+        try {
+            $user_type=$request->type;
+            $users = User::where('type', $user_type)->paginate(12);
+            return $this->ReturnData('users',$users,"All ".$user_type);
+        }
+        catch (\Exception $ex){
+            return $this->ReturnError($ex->getcode(),$ex->getMessage());
+        }
+    }
+    public function showUser(Request $request)
+    {
+        try {
+                $user=Auth()->user();
+                if(!$user){
+                    return $this->ReturnError('E00','Not Found This user..');
+                }
+
+            $userWithRelations = User::with('payments')->find($user->id);
+
+            // التكرار على المدفوعات وتعديل قيمة product_name
+            if ($userWithRelations && $userWithRelations->payments) {
+                foreach ($userWithRelations->payments as $payment) {
+                    // تحويل product_name إلى مصفوفة باستخدام json_decode
+                    $payment->product_name = json_decode($payment->product_name, true);
+                }
+            }
+            return $this->ReturnData('users',$userWithRelations,"done");
+        }
+        catch (\Exception $ex){
+            return $this->ReturnError($ex->getcode(),$ex->getMessage());
         }
     }
 }
