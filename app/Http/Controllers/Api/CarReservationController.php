@@ -32,7 +32,7 @@ class CarReservationController extends Controller
         ->where('package_to', '>=', $data['packages'])
         ->first();
 
-        if (!$availableCars || $availableCars->isEmpty()) {
+        if (!$availableCars ) {
 //            throw ValidationException::withMessages([
 //                'quantity' => __('messages.no_available_cars'),
 //            ]);
