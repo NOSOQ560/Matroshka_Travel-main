@@ -119,37 +119,6 @@ class StripeController extends Controller
     }
 
 
-//    public function formatData($request): array
-//    {
-//
-//        // معالجة قائمة المنتجات
-//        $lineItems = collect($request->input('products', []))->map(function ($product) use ($request) {
-//            return [
-//                "price_data" => [
-//                    "currency" => $request->input('currency', 'usd'), // استخدام العملة من الطلب الرئيسي
-//                    "product_data" => [
-//                        "name" => $product['name'], // اسم المنتج
-//                    ],
-//                    "unit_amount" => $product['price'] * 100, // تحويل السعر إلى سنتات
-//                ],
-//                "quantity" => $product['quantity'], // الكمية
-//            ];
-//        })->toArray();
-//
-//        return [
-//            "success_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?session_id={CHECKOUT_SESSION_ID}',
-//            "cancel_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?cancel=true',
-//            "line_items" => $lineItems, // إضافة قائمة المنتجات
-//            "mode" => "payment",
-//            "metadata" => [
-//                "user_id" => $request->user_id, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
-//                "user_type" => $request->user_type, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
-//                "main_product"=>$request->main_product,
-//                "products" => json_encode($request->input('products', [])), // تمرير قائمة المنتجات
-//            ],
-//        ];
-//    }
-
     public function formatData($request): array
     {
         // معالجة قائمة المنتجات
@@ -179,6 +148,39 @@ class StripeController extends Controller
             ],
         ];
     }
+
+//    public function formatData($request): array
+//    {
+//        // معالجة قائمة المنتجات
+//        $lineItems = collect($request->input('products', []))->map(function ($product) use ($request) {
+//            // حساب الخصم (الكاش باك) لكل منتج
+//            $discountAmount = isset($product['price']) ? $product['price'] * $request->input('cashback', 0) / 100 : 0;
+//
+//            return [
+//                "price_data" => [
+//                    "currency" => $request->input('currency', 'usd'), // استخدام العملة من الطلب الرئيسي
+//                    "product_data" => [
+//                        "name" => $product['name'] ?? $request->input('product_name', 'Unnamed Product'), // إذا لم يكن هناك اسم، استخدم المنتج الرئيسي
+//                    ],
+//                    "unit_amount" => isset($product['price']) ? ($product['price'] - $discountAmount) * 100 : $request->input('amount', 0) * 100, // تطبيق الخصم على المبلغ
+//                ],
+//                "quantity" => $product['quantity'] ?? $request->input('quantity'), // إذا لم تكن هناك كمية، استخدم الكمية الرئيسية
+//            ];
+//        })->toArray();
+//
+//        return [
+//            "success_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?session_id={CHECKOUT_SESSION_ID}',
+//            "cancel_url" => $request->getSchemeAndHttpHost() . '/api/v1/payment/stripe/callback?cancel=true',
+//            "line_items" => $lineItems, // إضافة قائمة المنتجات مع الخصم
+//            "mode" => "payment",
+//            "metadata" => [
+//                "user_id" => $request->user_id, // تمرير معرف المستخدم (مع التحقق من وجود المستخدم)
+//                "user_type" => $request->user_type, // تمرير نوع المستخدم
+//                "main_product" => $request->main_product, // تمرير المنتج الرئيسي
+//                "products" => json_encode($request->input('products', [])), // تمرير قائمة المنتجات كما هي
+//            ],
+//        ];
+//    }
 
 
     public function calculateCashback($amount, $userType)

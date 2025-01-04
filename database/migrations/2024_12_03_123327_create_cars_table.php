@@ -21,6 +21,7 @@ return new class extends Migration
             $table->tinyInteger('package_from');
             $table->tinyInteger('package_to')->nullable();
             $table->decimal('airport_to_town');
+            $table->decimal('town_to_countryside');
             $table->decimal('hour_in_town');
             $table->softDeletes();
             $table->timestamps();
