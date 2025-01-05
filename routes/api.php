@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AirportController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\HotelController;
+use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\StripeController;
 use Illuminate\Support\Facades\Route;
@@ -108,7 +109,6 @@ Route::group(['prefix'=>'v1/payment'],function (){
         Route::get('/user/payments', [StripeController::class, 'getUserPaymentsWithCashbacks']);
         Route::get('/user/cashback', [StripeController::class, 'getUserCashback']);
 
-
     });
 
     Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -128,12 +128,17 @@ Route::prefix('v1/notifications')->group(function () {
     Route::post('/mark-as-read', [NotificationController::class, 'markAsRead']);
 });
 
+////////////////////// locations ///////////
+
+Route::prefix('v1/location')->group(function (){
+   Route::get('/',[LocationController::class,'getLocations']);
+});
+
+
+
 /////////////  Admin ///////////////
 
 Route::group(['prefix'=>'admin'],function (){
-
-
-
 // strory
     Route::group(['prefix' => 'v1/story', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
         Route::get('', [StoryController::class, 'index']);

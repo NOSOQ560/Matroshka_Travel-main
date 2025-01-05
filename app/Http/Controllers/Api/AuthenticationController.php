@@ -197,7 +197,7 @@ class AuthenticationController extends Controller
             if ($userWithRelations && $userWithRelations->payments) {
                 foreach ($userWithRelations->payments as $payment) {
                     // تحويل product_name إلى مصفوفة باستخدام json_decode
-                    $payment->product_name = json_decode($payment->product_name, true);
+                    $payment->description = json_decode($payment->description, true);
                 }
             }
             return $this->ReturnData('users',$userWithRelations,"done");

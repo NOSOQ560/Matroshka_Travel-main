@@ -13,6 +13,8 @@ class Payment extends Model
         'user_id',
         'session_id',
         'amount',
+        'discount',
+        'amountAfterCashback',
         'currency',
         'product_name',
         'description',

@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ارتباط بالمستخدم
             $table->string('session_id'); // معرف الجلسة من Stripe
-            $table->decimal('amount', 10, 2); // المبلغ
+            $table->decimal('amount', 10, 2);
+            $table->decimal('discount',10,2);// المبلغ
+            $table->decimal('amountAfterCashback',10,2);// المبلغ
             $table->string('currency', 10); // العملة
-            $table->json('product_name')->nullable(); // اسم المنتج
-            $table->text('description')->nullable(); // وصف المنتج
+            $table->json('description')->nullable(); // اسم المنتج
+            $table->string('product_name')->nullable(); // وصف المنتج
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending'); // حالة الدفع
             $table->timestamps();
         });
