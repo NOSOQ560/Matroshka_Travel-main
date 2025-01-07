@@ -13,12 +13,14 @@ use App\Http\Requests\Api\UpdateProfileRequest;
 use App\Http\Requests\Api\VerifyEmailRequest;
 use App\Http\Resources\Api\UserResource;
 use App\Http\Traits\GeneralTrait;
+use App\Mail\TestEmail;
 use App\Models\User;
 use App\Notifications\UserRegisterNotification;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
 class AuthenticationController extends Controller
@@ -29,7 +31,8 @@ class AuthenticationController extends Controller
         try {
             DB::beginTransaction();
             $user = User::create($request->validated());
-            Notification::send($user, new UserRegisterNotification($user));
+//            Notification::send($user, new UserRegisterNotification($user));
+            Mail::to($user->email)->send(new TestEmail($user));
             DB::commit();
 
             return ResponseHelper::createdResponse(['otp' => $user->otp]);
