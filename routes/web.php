@@ -9,7 +9,7 @@ Route::get('/', function () {
 });
 
 //Route::get('/send-test-email', function () {
-//    Mail::to('eslammeky111@gmail.com')->send(new TestEmail());
+//    Mail::to('example@gmail.com')->send(new TestEmail());
 //    return 'تم إرسال البريد الإلكتروني بنجاح!';
 //});
 
