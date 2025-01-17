@@ -149,7 +149,7 @@ Route::group(['prefix'=>'admin'],function (){
     });
 
 // configration
-    Route::group(['prefix' => 'v1/configration', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/configration', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [ConfigrationController::class, 'index']);
         Route::post('', [ConfigrationController::class, 'store']);
         Route::get('{id}', [ConfigrationController::class, 'show']);
@@ -158,7 +158,7 @@ Route::group(['prefix'=>'admin'],function (){
     });
 
 // category
-    Route::group(['prefix' => 'v1/category', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/category', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [CategoryController::class, 'index']);
         Route::post('', [CategoryController::class, 'store']);
         Route::get('{id}', [CategoryController::class, 'show']);
@@ -167,16 +167,17 @@ Route::group(['prefix'=>'admin'],function (){
     });
 
 // product
-    Route::group(['prefix' => 'v1/product', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
-        Route::get('', [ProductController::class, 'index']);
+    Route::group(['prefix' => 'v1/product', 'middleware' => ['auth:sanctum']], function () {
+        Route::get('/{categoryId}', [ProductController::class, 'index']);
+        Route::get('singleProduct/{id}', [ProductController::class, 'show']);
         Route::post('', [ProductController::class, 'store']);
-        Route::get('{id}', [ProductController::class, 'show']);
+//        Route::get('{id}', [ProductController::class, 'show']);
         Route::post('{id}', [ProductController::class, 'update']);
         Route::delete('{id}', [ProductController::class, 'destroy']);
     });
 
 // car
-    Route::group(['prefix' => 'v1/car', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/car', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [CarController::class, 'index']);
         Route::post('', [CarController::class, 'store']);
         Route::get('{id}', [CarController::class, 'show']);
@@ -185,7 +186,7 @@ Route::group(['prefix'=>'admin'],function (){
     });
 
 // airport
-    Route::group(['prefix' => 'v1/airport', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/airport', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [AirportController::class, 'index']);
         Route::post('', [AirportController::class, 'store']);
         Route::get('{id}', [AirportController::class, 'show']);
@@ -194,7 +195,7 @@ Route::group(['prefix'=>'admin'],function (){
     });
 
 // hotel
-    Route::group(['prefix' => 'v1/hotel', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/hotel', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [HotelController::class, 'index']);
         Route::post('', [HotelController::class, 'store']);
         Route::get('{id}', [HotelController::class, 'show']);
