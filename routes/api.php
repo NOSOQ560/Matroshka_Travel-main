@@ -140,7 +140,7 @@ Route::prefix('v1/location')->group(function (){
 
 Route::group(['prefix'=>'admin'],function (){
 // strory
-    Route::group(['prefix' => 'v1/story', 'middleware' => ['auth:sanctum', 'admin-type']], function () {
+    Route::group(['prefix' => 'v1/story', 'middleware' => ['auth:sanctum']], function () {
         Route::get('', [StoryController::class, 'index']);
         Route::post('', [StoryController::class, 'store']);
         Route::get('{id}', [StoryController::class, 'show']);
