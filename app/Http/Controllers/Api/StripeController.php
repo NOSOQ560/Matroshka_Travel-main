@@ -28,7 +28,7 @@ class StripeController extends Controller
 
         $this->header = [
             'Accept' => 'application/json',
-            'Content-Type' =>'application/x-www-form-urlencoded',
+//            'Content-Type' =>'application/x-www-form-urlencoded',
             'Authorization' => 'Bearer ' . $this->api_key,
         ];
 
