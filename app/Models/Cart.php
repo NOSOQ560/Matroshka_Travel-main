@@ -23,10 +23,11 @@ class Cart extends Model
         return $this->hasMany(CartItem::class);
     }
 
-    public function getTotalAttribute()
+    public function getTotalAttribute(): float
     {
         return $this->cartItems ? $this->cartItems->sum(function ($item) {
-            return $item->quantity * $item->product->price;
-        }) : 0;
+            return $item->quantity * ($item->product->price ?? 0);
+        }) : 0.0;
     }
+
 }

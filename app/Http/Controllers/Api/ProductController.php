@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -57,16 +58,24 @@ class ProductController extends Controller
     public function show($id): JsonResponse|JsonResource
     {
         try {
+            // إضافة سجل للأخطاء لتتبع ما يحدث
+            Log::info('Fetching product', ['product_id' => $id]);
+
             $product = $this->productModel::with(['mainImage', 'otherImages'])->find($id);
-            if (empty($product)) {
+
+            if (!$product) {
+                Log::warning('Product not found', ['product_id' => $id]);
                 return ResponseHelper::notFoundResponse();
             }
 
             return ResponseHelper::okResponse(data: ProductResource::make($product));
         } catch (Exception $exception) {
+            // إضافة سجل للخطأ
+            Log::error('Error fetching product', ['exception' => $exception->getMessage(), 'product_id' => $id]);
             return ResponseHelper::internalServerErrorResponse($exception->getMessage());
         }
     }
+
 
     public function store(ProductRequest $request): JsonResponse
     {

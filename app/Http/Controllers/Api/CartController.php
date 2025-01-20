@@ -29,7 +29,7 @@ class CartController extends Controller
 //        }
 //    }
 
-    public function index(): JsonResponse|JsonResource
+    public function index(): JsonResponse
     {
         try {
             $cart = $this->cartModel::whereUserId(auth()->id())->with('cartItems.product.mainImage')->first();
@@ -38,11 +38,16 @@ class CartController extends Controller
                 return ResponseHelper::notFoundResponse('Cart not found.');
             }
 
-            return ResponseHelper::okResponse(data: CartResource::make($cart));
+            // إرجاع الاستجابة كـ JsonResponse
+            return response()->json([
+                'status' => 'success',
+                'data' => new CartResource($cart)
+            ]);
         } catch (Exception $exception) {
             return ResponseHelper::internalServerErrorResponse($exception->getMessage());
         }
     }
+
 
 //    public function store(CartRequest $request): JsonResponse
 //    {
@@ -83,32 +88,40 @@ class CartController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
+
+            // إذا كان الكارت موجودًا أو سيتم إنشاؤه
             $cart = $this->cartModel::firstOrCreate(
                 ['user_id' => auth()->id()],
                 ['user_id' => auth()->id()]
             );
 
+            // تحميل المنتج مع صورته الرئيسية
             $cartItem = $this->cartItemModel::where([
                 'cart_id' => $cart->id,
                 'product_id' => $data['product_id'],
-            ])->first();
+            ])->with('product.mainImage')->first(); // هنا تم إضافة with('product.mainImage')
 
+            // تحديد الكمية الإجمالية
             $totalQuantity = $cartItem ? $cartItem->quantity + $data['quantity'] : $data['quantity'];
 
+            // التحقق من توفر الكمية
             if ($cartItem && $totalQuantity > $cartItem->product->stock) {
                 throw ValidationException::withMessages([
                     'quantity' => __('messages.not_enough_product', ['available' => $cartItem->product->stock]),
                 ]);
             }
 
+            // تحديث أو إنشاء عنصر الكارت
             $this->cartItemModel::updateOrCreate(
                 ['cart_id' => $cart->id, 'product_id' => $data['product_id']],
                 ['quantity' => $totalQuantity]
             );
 
+            // إتمام العملية بنجاح
             DB::commit();
             return ResponseHelper::createdResponse(data: CartResource::make($cart));
         } catch (Exception $exception) {
+            // في حالة حدوث خطأ
             DB::rollBack();
             return ResponseHelper::internalServerErrorResponse($exception->getMessage());
         }

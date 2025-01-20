@@ -19,6 +19,7 @@ class CartResource extends JsonResource
             'user_id' => $this->user_id,
             'total' => $this->total,
             'cart_items' => CartItemResource::collection($this->whenLoaded('cartItems')),
+
         ];
     }
 }

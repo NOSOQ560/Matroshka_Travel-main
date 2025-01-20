@@ -21,7 +21,7 @@ class ProductResource extends JsonResource
             'description' => $this->whenHas('description'),
             'price' => $this->whenHas('price', number_format($this->price, 2)),
             'stock' => $this->whenHas('stock'),
-            'main_image' => $this->when($this->relationLoaded('mainImage'), $this->mainImage->first()->original_url ?: null),
+            'main_image' => $this->when($this->relationLoaded('mainImage'), optional($this->mainImage->first())->original_url ?: null),
             'other_images' => $this->when($this->relationLoaded('otherImages'), $this->otherImages->map(
                 function ($file) {
                     return ['id' => $file->id, 'url' => $file->original_url];

@@ -19,6 +19,8 @@ class CartItemResource extends JsonResource
             'product' => ProductResource::make($this->whenLoaded('product')),
             'quantity' => $this->whenHas('quantity'),
             'total' => $this->quantity * $this->product->price,
+            'image_url' => $this->product->mainImage->first() ? $this->product->mainImage->first()->original_url : null, // استخدام first() للحصول على الصورة الأولى
+
         ];
     }
 }
