@@ -19,7 +19,7 @@ class ProductResource extends JsonResource
             'category_id' => $this->when(! $this->relationLoaded('category') && ! is_null('category_id'), $this->category_id),
             'name' => $this->whenHas('name'),
             'description' => $this->whenHas('description'),
-            'price' => $this->whenHas('price', number_format($this->price, 2)),
+            'price' => $this->whenHas('price', $this->price !== null ? number_format($this->price, 2) : null),
             'stock' => $this->whenHas('stock'),
             'main_image' => $this->when($this->relationLoaded('mainImage'), optional($this->mainImage->first())->original_url ?: null),
             'other_images' => $this->when($this->relationLoaded('otherImages'), $this->otherImages->map(
@@ -28,6 +28,7 @@ class ProductResource extends JsonResource
                 }
             )),
             'category' => CategoryResource::make($this->whenLoaded('category')),
+
         ];
     }
 }
